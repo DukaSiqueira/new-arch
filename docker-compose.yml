@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+
+    #PHP Service
+    api:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: api
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: api
+            SERVICE_TAGS: dev
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+            - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - app-network
+
+    #Nginx Service
+    webserver:
+        image: nginx:alpine
+        container_name: apiserver
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./:/var/www
+            - ./nginx/conf.d/:/etc/nginx/conf.d/
+        networks:
+            - app-network
+
+    #PostgreSql Service
+    db:
+        image: postgres
+        container_name: database
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: psql
+            SERIVE_TAGE: dev
+            POSTGRES_DB: newarc
+            POSTGRES_USER: DukaSiqueira
+            POSTGRES_PASSWORD: Siqueira_123
+        ports:
+            - "3306:5432"
+        volumes:
+            - dbdata:/var/lib/postgresql/data
+        networks:
+            - app-network
+
+#Docker Networks
+networks:
+    app-network:
+        driver: bridge
+
+#Docker Volumes
+volumes:
+    dbdata:
+        driver: local
