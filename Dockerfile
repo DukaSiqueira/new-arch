@@ -42,12 +42,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copie as permissões do diretório da aplicação existente
 COPY --chown=www:www . /var/www
 
-# Defina as permissões 755 recursivamente no diretório /var/www
-RUN chmod -R 755 /var/www/storage/logs
+USER www
 
 # Comando para iniciar o Supervisor e o PHP-FPM
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
-# Expose port 9000 and start php-fpm server
-#EXPOSE 9000
-#CMD ["php-fpm"]
