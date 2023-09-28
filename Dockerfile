@@ -1,9 +1,10 @@
+# Use a imagem base do PHP
 FROM php:8.1-fpm
 
-# Set working directory
+# Defina o diretório de trabalho
 WORKDIR /var/www
 
-# Install dependencies
+# Instale as dependências
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpng-dev \
@@ -17,29 +18,36 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libzip-dev \
-    libonig-dev
+    libonig-dev \
+    supervisor
 
-# Instalando as extensões necessárias
+# Instale as extensões necessárias do PHP
 RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install gd
 
-# Install composer
+# Instale o Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Add user for laravel application
+# Adicione um usuário para a aplicação Laravel
 RUN groupadd -g 1000 www
 RUN useradd -u 1000 -ms /bin/bash -g www www
 
-# Copy existing application directory contents
+# Copie o conteúdo do diretório da aplicação existente
 COPY . /var/www
 
-# Copy existing application directory permissions
+# Copie o arquivo de configuração do Supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copie as permissões do diretório da aplicação existente
 COPY --chown=www:www . /var/www
 
-# Change current user to www
-USER www
+# Defina as permissões 755 recursivamente no diretório /var/www
+RUN chmod -R 755 /var/www/storage/logs
+
+# Comando para iniciar o Supervisor e o PHP-FPM
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 # Expose port 9000 and start php-fpm server
-EXPOSE 9000
-CMD ["php-fpm"]
+#EXPOSE 9000
+#CMD ["php-fpm"]
